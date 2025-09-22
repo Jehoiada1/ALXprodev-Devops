@@ -1,0 +1,7 @@
+# Enforce LF line endings for scripts
+Advanced_shell/* text eol=lf
+Advanced_shell/apiAutomation-0x00 text eol=lf
+Advanced_shell/data_extraction_automation-0x01 text eol=lf
+Advanced_shell/batchProcessing-0x02 text eol=lf
+Advanced_shell/summaryData-0x03 text eol=lf
+Advanced_shell/batchProcessing-0x04 text eol=lf
