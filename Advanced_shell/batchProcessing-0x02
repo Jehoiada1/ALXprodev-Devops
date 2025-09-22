@@ -1,0 +1,36 @@
+#!/bin/bash
+# Task 2: Batch Pokémon Data Retrieval
+# Fetch data for multiple Pokémon and save to separate files
+
+done
+
+POKEMON_LIST=(bulbasaur ivysaur venusaur charmander charmeleon)
+DATA_DIR="pokemon_data"
+API_URL="https://pokeapi.co/api/v2/pokemon"
+ERROR_LOG="errors.txt"
+
+mkdir -p "$DATA_DIR"
+
+for NAME in "${POKEMON_LIST[@]}"; do
+    echo "Fetching data for $NAME..."
+    OUTFILE="$DATA_DIR/$NAME.json"
+    ATTEMPT=1
+    SUCCESS=0
+    while [ $ATTEMPT -le 3 ]; do
+        curl -s "$API_URL/$NAME" -o "$OUTFILE"
+        if [ $? -eq 0 ] && [ -s "$OUTFILE" ]; then
+            echo "Saved data to $OUTFILE ✅"
+            SUCCESS=1
+            break
+        else
+            echo "Attempt $ATTEMPT failed for $NAME" >> "$ERROR_LOG"
+            rm -f "$OUTFILE"
+            sleep 2
+        fi
+        ATTEMPT=$((ATTEMPT+1))
+    done
+    if [ $SUCCESS -eq 0 ]; then
+        echo "Error fetching $NAME after 3 attempts" >> "$ERROR_LOG"
+    fi
+    sleep 2 # Rate limiting
+done

@@ -1,0 +1,19 @@
+#!/bin/bash
+# Task 3: Summarize Pokémon Data
+# Generate CSV and calculate averages
+
+DATA_DIR="pokemon_data"
+CSV="pokemon_report.csv"
+
+# Write header
+echo "Name,Height (m),Weight (kg)" > "$CSV"
+
+for FILE in "$DATA_DIR"/*.json; do
+    NAME=$(jq -r '.name' "$FILE" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
+    HEIGHT=$(jq -r '.height' "$FILE" | awk '{printf "%.1f", $1/10}')
+    WEIGHT=$(jq -r '.weight' "$FILE" | awk '{printf "%.1f", $1/10}')
+    echo "$NAME,$HEIGHT,$WEIGHT" >> "$CSV"
+done
+
+awk -F',' 'NR>1 {h+=$2; w+=$3; c++} END {printf "\nAverage Height: %.2f m\nAverage Weight: %.2f kg\n", h/c, w/c}' "$CSV"
+echo "CSV Report generated at: $CSV"

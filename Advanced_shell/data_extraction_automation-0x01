@@ -1,0 +1,11 @@
+#!/bin/bash
+# Task 1: Extract Pokémon Data
+# Parse data.json for name, height, weight, type
+
+JSON="data.json"
+NAME=$(jq -r '.name' "$JSON" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
+HEIGHT=$(jq -r '.height' "$JSON" | awk '{printf "%.1f", $1/10}')
+WEIGHT=$(jq -r '.weight' "$JSON" | awk '{printf "%.0f", $1/10}')
+TYPE=$(jq -r '.types[0].type.name' "$JSON" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
+
+echo "$NAME is of type $TYPE, weighs ${WEIGHT}kg, and is ${HEIGHT}m tall."
