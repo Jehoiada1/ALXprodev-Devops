@@ -10,6 +10,15 @@ ERROR_LOG="errors.txt"
 mkdir -p "$DATA_DIR"
 PIDS=()
 
+# Trap to ensure all background jobs are cleaned up on interrupt or error
+cleanup() {
+    if [ ${#PIDS[@]} -gt 0 ]; then
+        echo "Cleaning up background jobs..."
+        kill ${PIDS[@]} 2>/dev/null || true
+    fi
+}
+trap cleanup INT TERM ERR
+
 for NAME in "${POKEMON_LIST[@]}"; do
     echo "Fetching data for $NAME..."
     OUTFILE="$DATA_DIR/$NAME.json"
@@ -25,9 +34,18 @@ for NAME in "${POKEMON_LIST[@]}"; do
     PIDS+=( $! )
 done
 
-# Wait for all background jobs
+# Wait for all background jobs and capture exit codes
+FAIL=0
 for PID in "${PIDS[@]}"; do
-    wait $PID
+    if ! wait $PID; then
+        FAIL=1
+    fi
 done
 
-echo "All fetches complete."
+trap - INT TERM ERR
+
+if [ $FAIL -eq 0 ]; then
+    echo "All fetches complete."
+else
+    echo "Some fetches failed. See $ERROR_LOG for details."
+fi
