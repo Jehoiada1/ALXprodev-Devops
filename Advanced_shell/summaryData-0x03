@@ -1,19 +1,40 @@
 #!/bin/bash
-# Task 3: Summarize Pokémon Data
-# Generate CSV and calculate averages
 
-DATA_DIR="pokemon_data"
-CSV="pokemon_report.csv"
+# Create a CSV file to store the summary
+echo "Name,Height,Weight" > pokemon_summary.csv
 
-# Write header
-echo "Name,Height (m),Weight (kg)" > "$CSV"
+# Variables for calculating the total height and weight
+total_height=0
+total_weight=0
+pokemon_count=0
 
-for FILE in "$DATA_DIR"/*.json; do
-    NAME=$(jq -r '.name' "$FILE" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
-    HEIGHT=$(jq -r '.height' "$FILE" | awk '{printf "%.1f", $1/10}')
-    WEIGHT=$(jq -r '.weight' "$FILE" | awk '{printf "%.1f", $1/10}')
-    echo "$NAME,$HEIGHT,$WEIGHT" >> "$CSV"
+# Loop through all JSON files (assuming they are named like pikachu.json, bulbasaur.json, etc.)
+for file in *.json; do
+  # Extract the Pokémon name, height, and weight using jq
+  name=$(jq -r '.name' "$file")
+  height=$(jq -r '.height' "$file")
+  weight=$(jq -r '.weight' "$file")
+
+  # Convert weight from hectograms to kilograms and height from decimeters to meters
+  formatted_weight=$(echo "$weight / 10" | bc -l)
+  formatted_height=$(echo "$height / 10" | bc -l)
+
+  # Append the data to the CSV file
+  echo "$name,$formatted_height,$formatted_weight" >> pokemon_summary.csv
+
+  # Accumulate totals for calculating averages
+  total_height=$(echo "$total_height + $formatted_height" | bc -l)
+  total_weight=$(echo "$total_weight + $formatted_weight" | bc -l)
+  pokemon_count=$((pokemon_count + 1))
 done
 
-awk -F',' 'NR>1 {h+=$2; w+=$3; c++} END {printf "\nAverage Height: %.2f m\nAverage Weight: %.2f kg\n", h/c, w/c}' "$CSV"
-echo "CSV Report generated at: $CSV"
+# Calculate averages using awk and sed
+average_height=$(echo "$total_height / $pokemon_count" | bc -l)
+average_weight=$(echo "$total_weight / $pokemon_count" | bc -l)
+
+# Print the averages and append them to the CSV file
+echo "Average Height,Average Weight" >> pokemon_summary.csv
+echo "$average_height,$average_weight" >> pokemon_summary.csv
+
+# Display the summary
+cat pokemon_summary.csv | sed 's/\./,/g'  # Replace '.' with ',' for better readability
